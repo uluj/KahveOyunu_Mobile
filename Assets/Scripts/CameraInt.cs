@@ -10,7 +10,9 @@ public class CameraInt : MonoBehaviour
     private bool isTransitioning = false; // Whether the camera is transitioning
 
     // Camera zoom settings
+    // We need to change this to native resolution
     public float zoomSpeed = 5f; // Speed of zoom
+    public float zoomSpeedTouch = 10f;
     public float minZoom = 1f;   // Minimum orthographic size
     public float maxZoom = 10f;  // Maximum orthographic size
 
@@ -20,16 +22,28 @@ public class CameraInt : MonoBehaviour
     {
         CustomEventManager.OnCameraInterpolation += TriggerCameraInterpolation;
         CustomEventManager.OnReverseCameraInterpolation += ReverseTriggerCameraInterpolation;
+        // Zoom for Mouse
         CustomEventManager.OnZoomIn += ZoomIn;
         CustomEventManager.OnZoomOut += ZoomOut;
+        // Zoom for Touch
+        CustomEventManager.OnZoomInTouch += ZoomInTouch;
+        CustomEventManager.OnZoomOutTouch += ZoomOutTouch;
+        // Drag
+        CustomEventManager.OnDrag += HandleDrag;
     }
 
     void OnDisable()
     {
         CustomEventManager.OnCameraInterpolation -= TriggerCameraInterpolation;
         CustomEventManager.OnReverseCameraInterpolation -= ReverseTriggerCameraInterpolation;
+        // Zoom for mouse
         CustomEventManager.OnZoomIn -= ZoomIn;
         CustomEventManager.OnZoomOut -= ZoomOut;
+        // Zoom for Touch
+        CustomEventManager.OnZoomInTouch -= ZoomInTouch;
+        CustomEventManager.OnZoomOutTouch -= ZoomOutTouch;
+        // Drag
+        CustomEventManager.OnDrag -= HandleDrag;
     }
 
     void Start()
@@ -46,6 +60,30 @@ public class CameraInt : MonoBehaviour
         {
             HandleCameraInterpolation();
         }
+    }
+    private void HandleTouchZoom()
+    {
+
+    }
+    private void ZoomInTouch(float distance)
+    {
+        float adjustedDistance = distance * 100f;
+        mainCamera.orthographicSize -= adjustedDistance * zoomSpeed * Time.deltaTime;
+        mainCamera.orthographicSize = Mathf.Clamp(mainCamera.orthographicSize, minZoom, maxZoom);
+    }
+    private void ZoomOutTouch(float distance)
+    {
+        float adjustedDistance = distance * 100f;
+        mainCamera.orthographicSize += adjustedDistance * zoomSpeed * Time.deltaTime;
+        mainCamera.orthographicSize = Mathf.Clamp(mainCamera.orthographicSize, minZoom, maxZoom);
+    }
+    private void HandleDrag(Vector2 dragDelta)
+    {
+        // Implement your drag handling logic here
+        Debug.Log($"Dragged by {dragDelta}");
+        // For example, move the camera:
+        Vector2 adjustedDelta = Camera.main.ScreenToViewportPoint(dragDelta);
+        mainCamera.transform.position = new Vector3(mainCamera.transform.position.x - adjustedDelta.x, mainCamera.transform.position.y, mainCamera.transform.position.z - adjustedDelta.y);
     }
 
     // Trigger camera interpolation
